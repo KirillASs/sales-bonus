@@ -35,23 +35,55 @@ function calculateBonusByProfit(index, total, seller) {
  * @param data
  * @param options
  * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
+ * @throws {Error} при некорректных входных данных
  */
 function analyzeSalesData(data, options) {
     const { calculateRevenue, calculateBonus } = options;
     
-    // @TODO: Проверка входных данных
-    if (!data || !data.purchase_records || !data.products || !data.sellers) {
-        console.error("Не хватает данных");
-        return [];
+    // Проверка наличия options
+    if (!options || typeof options !== 'object') {
+        throw new Error("Неверный формат данных");
     }
-
-    // @TODO: Проверка наличия опций
+    
+    // Проверка наличия и корректности опций
     if (typeof calculateRevenue !== "function" || typeof calculateBonus !== "function") {
-        console.error("Неверный формат данных");
-        return [];
+        throw new Error("Неверный формат данных");
+    }
+    
+    // Проверка наличия data
+    if (!data || typeof data !== 'object') {
+        throw new Error("Не хватает данных");
+    }
+    
+    // Проверка наличия и валидности sellers
+    if (!data.sellers || !Array.isArray(data.sellers)) {
+        throw new Error("Не хватает данных");
+    }
+    
+    // Проверка наличия и валидности products
+    if (!data.products || !Array.isArray(data.products)) {
+        throw new Error("Не хватает данных");
+    }
+    
+    // Проверка наличия и валидности purchase_records
+    if (!data.purchase_records || !Array.isArray(data.purchase_records)) {
+        throw new Error("Не хватает данных");
+    }
+    
+    // Проверка на пустые массивы
+    if (data.sellers.length === 0) {
+        throw new Error("Не хватает данных");
+    }
+    
+    if (data.products.length === 0) {
+        throw new Error("Не хватает данных");
+    }
+    
+    if (data.purchase_records.length === 0) {
+        throw new Error("Не хватает данных");
     }
 
-    // @TODO: Индексация продавцов и товаров для быстрого доступа
+    // Индексация продавцов и товаров для быстрого доступа
     const sellerIndex = Object.fromEntries(
         data.sellers.map(seller => [seller.id, seller])
     );
@@ -68,7 +100,7 @@ function analyzeSalesData(data, options) {
         product_sold: {}
     }));
 
-    // @TODO: Расчет выручки и прибыли для каждого продавца
+    // Расчет выручки и прибыли для каждого продавца
     data.purchase_records.forEach(record => {
         const seller = sellersStats.find(s => s.id === record.seller_id);
         if (!seller) return;
@@ -84,7 +116,6 @@ function analyzeSalesData(data, options) {
             const cost = product.purchase_price * item.quantity;
             
             // Посчитать выручку с учетом скидки через функцию calculateRevenue
-            // Передаём item (содержит sale_price, quantity, discount)
             const revenue = calculateRevenue(item, product);
             
             // Посчитать прибыль: выручка - себестоимость
@@ -102,22 +133,22 @@ function analyzeSalesData(data, options) {
         });
     });
 
-    // @TODO: Сортировка продавцов по прибыли и назначение премий
+    // Сортировка продавцов по прибыли и назначение премий
     sellersStats.sort((a, b) => b.profit - a.profit).forEach((seller, index) => {
         // Назначение бонуса
         seller.bonus = calculateBonus(index, sellersStats.length, seller);
-        // Список то 10
+        // Список топ 10
         seller.top_products = Object.entries(seller.product_sold)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
-            .map(([sku, quantity], index) => ({
-                rank: index + 1,
+            .map(([sku, quantity], idx) => ({
+                rank: idx + 1,
                 sku: sku,
                 quantity_sold: quantity
             }));
     });
 
-    // @TODO: Подготовка итоговой коллекции с нужными полями
+    // Подготовка итоговой коллекции с нужными полями
     return sellersStats.map(seller => ({
         seller_id: seller.id,
         name: seller.name,
