@@ -19,16 +19,18 @@ function calculateSimpleRevenue(purchase, _product) {
  */
 function calculateBonusByProfit(index, total, seller) {
     const { profit } = seller;
-
+    
+    let bonus;
     if (index === 0) {
-        return profit * 0.15;
+        bonus = profit * 0.15;
     } else if (index === 1 || index === 2) {
-        return profit * 0.10;
+        bonus = profit * 0.10;
     } else if (index === total - 1) {
-        return 0;
+        bonus = 0;
     } else {
-        return profit * 0.05;
+        bonus = profit * 0.05;
     }
+    return Number(bonus.toFixed(2));
 }
 
 /**
@@ -119,12 +121,11 @@ function analyzeSalesData(data, options) {
             // Посчитать выручку с учетом скидки через функцию calculateRevenue
             const revenue = calculateRevenue(item, product);
             
-            // Посчитать прибыль: выручка - себестоимость
-            const profit = revenue - cost;
+            profit = Number(profit.toFixed(2));
             
-            // Увеличить общую накопленную прибыль у продавца
-            seller.profit += profit;
-            seller.revenue += revenue;
+            // Накопление с округлением на каждом шаге
+            seller.profit = Number((seller.profit + profit).toFixed(2));
+            seller.revenue = Number((seller.revenue + revenue).toFixed(2));
             
             // Учет количества проданных товаров
             if (!seller.product_sold[item.sku]) {
