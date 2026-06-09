@@ -142,9 +142,8 @@ function analyzeSalesData(data, options) {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
             .map(([sku, quantity], idx) => ({
-                rank: idx + 1,
-                sku: sku,
-                quantity_sold: quantity
+                sku,
+                quantity
             }));
     });
 
